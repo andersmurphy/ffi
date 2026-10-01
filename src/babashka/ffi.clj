@@ -533,7 +533,7 @@
   "Calls f with argtypes' :string args replaced by temp C-string pointers,
   freed after the call. Strings passed to C must not be retained by it."
   [argtypes args f]
-  (with-open [arena (Arena/ofConfined)]
+  (clojure.core/with-open [arena (Arena/ofConfined)]
     (let [arr   (object-array args)
           types (object-array argtypes)
           n     (alength arr)]
