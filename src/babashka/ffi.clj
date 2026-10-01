@@ -541,7 +541,7 @@
         (when (< i n)
           (when (and (identical? :string (aget types i))
                   (instance? String (aget arr i)))
-            (aset arr i ^long
+            (aset arr i ^Object
               (.address ^MemorySegment
                 (.allocateFrom ^Arena arena ^String (aget arr i)))))
           (recur (inc i))))
