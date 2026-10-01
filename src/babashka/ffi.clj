@@ -533,14 +533,18 @@
   "Calls f with argtypes' :string args replaced by temp C-string pointers,
   freed after the call. Strings passed to C must not be retained by it."
   [argtypes args f]
-  (if (some #(= :string %) argtypes)
-    (clojure.core/with-open [arena (Arena/ofConfined)]
-      (f (mapv (fn [t a]
-                 (if (and (= :string t) (string? a))
-                   (.address (.allocateFrom ^Arena arena ^String a))
-                   a))
-               argtypes args)))
-    (f args)))
+  (with-open [arena (Arena/ofConfined)]
+    (let [arr   (object-array args)
+          types (object-array argtypes)
+          n     (alength arr)]
+      (loop [i 0]
+        (when (< i n)
+          (when (and (identical? :string (aget types i))
+                  (instance? String (aget arr i)))
+            (aset arr i (.address ^MemorySegment
+                          (.allocateFrom ^Arena arena ^String (aget arr i)))))
+          (recur (inc i))))
+      (f (java.util.Arrays/asList arr)))))
 
 ;; One coercion function per type, looked up when a binding is created, so
 ;; nothing dispatches on the type during a call.
